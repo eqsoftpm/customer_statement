@@ -6,9 +6,9 @@ class Customer {
   @HiveField(0)
   int id;
   @HiveField(1)
-  int companyId;
+  int? companyId;
   @HiveField(2)
-  int refId;
+  int? refId;
   @HiveField(3)
   String? name;
   @HiveField(4)
@@ -46,30 +46,30 @@ class Customer {
       this.longitude);
 
   factory Customer.fromJson(Map<String, dynamic> json) => Customer(
-      json['Id'],
+      json['id'],
       json['CompanyId'],
       json['RefId'],
-      json['Name'],
-      json['Address'],
-      json['PhoneNo'],
-      json['GSTIN'],
+      json['name'],
+      json['address'],
+      json['phone'],
+      json['gstin'],
       json['Email'],
-      json['Balance'],
+      json['balance'],
       json['Place'],
       json['Pincode'],
       json['Latitude'],
       json['Longitude']);
 
   Map<String, dynamic> toJson() => {
-        "Id": id,
+        "id": id,
         "CompanyId": companyId,
         "RefId": refId,
-        "Name": name,
-        "Address": address,
-        "PhoneNo": phoneNo,
-        "GSTIN": gstin,
+        "name": name,
+        "address": address,
+        "phone": phoneNo,
+        "gstin": gstin,
         "Email": email,
-        "Balance": balance,
+        "balance": balance,
         "Place": place,
         "Pincode": pincode,
         "Latitude": latitude,

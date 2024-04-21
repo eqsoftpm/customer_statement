@@ -1,25 +1,63 @@
 import 'package:flutter/material.dart';
 import 'package:ordertaking/cart_screen.dart';
 import 'package:ordertaking/customer_details_screen.dart';
+import 'package:ordertaking/global.dart';
 import 'package:ordertaking/models.dart';
 import 'package:ordertaking/services.dart';
+import 'package:ordertaking/sync_data.dart';
+import 'package:signalr_netcore/signalr_client.dart' as sr;
 
-class customerListScreen extends StatefulWidget {
+class CustomerListScreen extends StatefulWidget {
   @override
   _CustomerListScreenState createState() => _CustomerListScreenState();
 }
 
-class _CustomerListScreenState extends State<customerListScreen> {
+class _CustomerListScreenState extends State<CustomerListScreen> {
   late Future<List<Customer>> futureCustomers;
+  bool _dataLoading = false;
 
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
+  sr.HubConnection? _hubConnection;
 
   @override
   void initState() {
     super.initState();
     //Services().downloadCustomers();
     futureCustomers = Services().searchCustomersFromDb(null);
+  }
+
+  Future<void> openHub() async {
+    if (_hubConnection == null) {
+      _hubConnection = sr.HubConnectionBuilder()
+          .withUrl('${Services.ServerUrl}chat')
+          .withAutomaticReconnect()
+          .build();
+
+      _hubConnection!.on('CustomersUploadComplete', (args) {
+        // setState(() {
+        futureCustomers = Services().fetchCustomersFromDb();
+
+        // });
+      });
+    }
+
+    if (_hubConnection!.state != sr.HubConnectionState.Connected) {
+      await _hubConnection!.start();
+    }
+  }
+
+  Future<void> sendCustReq() async {
+    await openHub();
+    await _hubConnection!.send('GetCustomersRequest');
+  }
+
+  Future<void> clsoeHub() async {
+    if (_hubConnection != null) {
+      if (_hubConnection!.state != sr.HubConnectionState.Disconnected) {
+        await _hubConnection!.stop();
+      }
+    }
   }
 
   @override
@@ -29,11 +67,10 @@ class _CustomerListScreenState extends State<customerListScreen> {
         title: const Text('Customers'),
         actions: [
           IconButton(
+              // onPressed: _dataLoading ? null : refreshData,
               onPressed: () {
-                print('sync clicked');
-                setState(() {
-                  futureCustomers = Services().fetchCustomersFromDb();
-                });
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => SyncData()));
               },
               icon: const Icon(Icons.sync))
         ],
@@ -61,12 +98,15 @@ class _CustomerListScreenState extends State<customerListScreen> {
             child: FutureBuilder<List<Customer>>(
               future: futureCustomers,
               builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
+                if (snapshot.connectionState == ConnectionState.waiting &&
+                    _dataLoading) {
                   return const Center(child: CircularProgressIndicator());
                 } else if (snapshot.hasError) {
                   print(snapshot);
+                  _dataLoading = false;
                   return Center(child: Text('Error: ${snapshot.error}'));
                 } else {
+                  _dataLoading = false;
                   if (snapshot.hasData) {
                     snapshot.data!.sort((a, b) => a.name!.compareTo(b.name!));
                   }
@@ -79,8 +119,8 @@ class _CustomerListScreenState extends State<customerListScreen> {
                               .contains(_searchQuery)) {
                         return ListTile(
                           title: Text(snapshot.data![index].name!),
-                          subtitle: Text(
-                              'Price: Ph:${snapshot.data![index].phoneNo!}'),
+                          subtitle:
+                              Text('Ph:${snapshot.data![index].phoneNo ?? ""}'),
                           onTap: () {
                             Navigator.push(
                               context,
@@ -102,17 +142,27 @@ class _CustomerListScreenState extends State<customerListScreen> {
           )
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => CartScreen(),
-            ),
-          );
-        },
-        child: const Icon(Icons.send),
-      ),
+      // floatingActionButton: FloatingActionButton(
+      //   onPressed: () {
+      //     Navigator.push(
+      //       context,
+      //       MaterialPageRoute(
+      //         builder: (context) => CartScreen(),
+      //       ),
+      //     );
+      //   },
+      //   child: const Icon(Icons.send),
+      // ),
     );
+  }
+
+  void refreshData() {
+    // print('sync clicked');
+    setState(() {
+      _dataLoading = true;
+      //futureCustomers = Services().fetchCustomersFromDb();
+      futureCustomers = Future<List<Customer>>.value([]);
+      sendCustReq();
+    });
   }
 }

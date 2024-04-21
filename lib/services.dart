@@ -5,6 +5,8 @@ import 'package:ordertaking/global.dart';
 import 'package:ordertaking/models.dart';
 
 class Services {
+  static const String ServerUrl = 'https://localhost:44356/';
+
   Future<List<Product>> fetchProducts() async {
     final response =
         await http.get(Uri.parse('https://dummyjson.com/products?limit=100'));
@@ -17,7 +19,7 @@ class Services {
     }
   }
 
-  Future<void> _downloadCustomers() async {
+  Future<void> downloadCustomers() async {
     final box = Hive.box<Customer>(boxCustomers);
     await box.clear();
     final lst = await _fetchCustomers();
@@ -28,9 +30,9 @@ class Services {
 
   Future<List<Customer>> _fetchCustomers() async {
     print('starting fetch');
-    final response = await http.get(Uri.parse(
-        'https://live.eqsoftonline.com/SalesSyncApp/Apiv1/Customers?CompanyId=54'));
-    print(response);
+    final response = await http
+        .get(Uri.parse('${ServerUrl}api/Ledger/Customers?page=0&count=0'));
+    print(response.body);
     if (response.statusCode == 200) {
       final List<dynamic> jsonData = jsonDecode(response.body);
       //List<dynamic> productsData = jsonData['products'];
@@ -41,7 +43,7 @@ class Services {
   }
 
   Future<List<Customer>> fetchCustomersFromDb() async {
-    await _downloadCustomers();
+    await downloadCustomers();
     final box = Hive.box<Customer>(boxCustomers);
     return box.values.toList();
   }

@@ -9,7 +9,7 @@ class OrderTakingApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.green,
       ),
-      home: customerListScreen(),
+      home: CustomerListScreen(),
     );
   }
 }
