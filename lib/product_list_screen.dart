@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:ordertaking/cart_screen.dart';
-import 'package:ordertaking/models.dart';
-import 'package:ordertaking/services.dart';
+import 'package:pooramledger/cart_screen.dart';
+import 'package:pooramledger/models.dart';
+import 'package:pooramledger/services.dart';
 
 import 'product_details_screen.dart';
 

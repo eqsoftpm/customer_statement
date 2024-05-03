@@ -20,7 +20,7 @@ class Customer {
   @HiveField(7)
   String? email;
   @HiveField(8)
-  double? balance;
+  num? balance;
   @HiveField(9)
   String? place;
   @HiveField(10)
@@ -121,4 +121,48 @@ class CartItem {
   int quantity;
 
   CartItem(this.product, this.quantity);
+}
+
+class Ledger {
+  int id;
+  String? docId;
+  String? docNo;
+  String? docType;
+  DateTime? docDate;
+  String? description;
+  num? amount;
+  String? requestId;
+
+  Ledger(
+    this.id,
+    this.docId,
+    this.docNo,
+    this.docType,
+    this.docDate,
+    this.description,
+    this.amount,
+    this.requestId,
+  );
+
+  factory Ledger.fromJson(Map<String, dynamic> json) => Ledger(
+        json["id"],
+        json["docId"],
+        json["docNo"],
+        json["docType"],
+        json["docDate"] == null ? null : DateTime.parse(json["docDate"]),
+        json["description"],
+        json["amount"],
+        json["requestId"],
+      );
+
+  Map<String, dynamic> toJson() => {
+        "id": id,
+        "docId": docId,
+        "docNo": docNo,
+        "docType": docType,
+        "docDate": docDate?.toIso8601String(),
+        "description": description,
+        "amount": amount,
+        "requestId": requestId,
+      };
 }

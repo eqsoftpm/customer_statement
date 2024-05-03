@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ordertaking/global.dart';
+import 'package:pooramledger/global.dart';
 
 class OrderSummaryScreen extends StatelessWidget {
   @override

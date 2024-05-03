@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ordertaking/global.dart';
+import 'package:pooramledger/global.dart';
 import 'package:share_plus/share_plus.dart';
 
 class CartScreen extends StatelessWidget {

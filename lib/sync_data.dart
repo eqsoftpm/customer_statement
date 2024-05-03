@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:ordertaking/models.dart';
-import 'package:ordertaking/services.dart';
+import 'package:pooramledger/models.dart';
+import 'package:pooramledger/services.dart';
 import 'package:signalr_netcore/signalr_client.dart' as sr;
 
 class SyncData extends StatefulWidget {
@@ -32,8 +32,22 @@ class _SyncDataState extends State<SyncData> {
         setState(() {
           _statusText = "Download in Progress";
         });
-        await Services().downloadCustomers();
-        await clsoeHub();
+        try {
+          await Services().downloadCustomers();
+        } catch (e) {
+          setState(() {
+            print(e);
+            _statusText = 'download cust: $e';
+          });
+        }
+
+        try {
+          await clsoeHub();
+        } catch (e) {
+          setState(() {
+            _statusText = 'download cust: $e';
+          });
+        }
 
         setState(() {
           _statusText = "Download Completed";
@@ -45,7 +59,13 @@ class _SyncDataState extends State<SyncData> {
     }
 
     if (_hubConnection!.state != sr.HubConnectionState.Connected) {
-      await _hubConnection!.start();
+      try {
+        await _hubConnection!.start();
+      } catch (e) {
+        setState(() {
+          _statusText = 'Statr - $e';
+        });
+      }
     }
     setState(() {
       _statusText = "Connected...";
@@ -53,8 +73,14 @@ class _SyncDataState extends State<SyncData> {
   }
 
   Future<void> sendCustReq() async {
-    await openHub();
-    await _hubConnection!.send('GetCustomersRequest');
+    try {
+      await openHub();
+      await _hubConnection!.send('GetCustomersRequest');
+    } catch (e) {
+      setState(() {
+        _statusText = 'Send Cust Req: $e';
+      });
+    }
   }
 
   Future<void> clsoeHub() async {
@@ -86,7 +112,11 @@ class _SyncDataState extends State<SyncData> {
             child: Text('No'),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () async {
+              await clsoeHub();
+              if (!context.mounted) return;
+              Navigator.pop(context, true);
+            },
             child: Text('Yes'),
           ),
         ],
@@ -99,21 +129,24 @@ class _SyncDataState extends State<SyncData> {
     return WillPopScope(
       onWillPop: _onBackPressed,
       child: Scaffold(
-        appBar: AppBar(
-          title: Text('Sync Customers'),
-        ),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Image.asset(
-                'loading.gif', // Path to your GIF file
-                width: 200,
-                height: 200,
-              ),
-              const SizedBox(height: 16),
-              Text(_statusText),
-            ],
+        appBar: null,
+        // appBar: AppBar(
+        //   title: Text('Sync Customers'),
+        // ),
+        body: SafeArea(
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Image.asset(
+                  'assets/loading.gif', // Path to your GIF file
+                  width: 200,
+                  height: 200,
+                ),
+                const SizedBox(height: 16),
+                Text(_statusText),
+              ],
+            ),
           ),
         ),
       ),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:ordertaking/global.dart';
-import 'package:ordertaking/models.dart';
+import 'package:pooramledger/global.dart';
+import 'package:pooramledger/models.dart';
 
 class ProductDetailsScreen extends StatefulWidget {
   final Product product;
