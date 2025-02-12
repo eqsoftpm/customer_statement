@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 // import 'package:ordertaking/cart_screen.dart';
 import 'package:pooramledger/customer_details_screen.dart';
@@ -16,10 +18,17 @@ class CustomerListScreen extends StatefulWidget {
 class _CustomerListScreenState extends State<CustomerListScreen> {
   late Future<List<Customer>> futureCustomers;
   bool _dataLoading = false;
+  // Timer? debounce;
 
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   //sr.HubConnection? _hubConnection;
+
+  @override
+  void dispose() {
+    // if (debounce != null && debounce!.isActive) debounce!.cancel();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -91,40 +100,58 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
               children: [
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.all(8.0),
+                    padding: const EdgeInsets.fromLTRB(12, 16, 8, 8),
                     child: TextField(
                       controller: _searchController,
-                      decoration: const InputDecoration(
-                        hintText: 'Search Customers',
-                        prefixIcon: Icon(Icons.search),
-                      ),
+                      // style: TextStyle(fontSize: 16),
+                      decoration: InputDecoration(
+                          hintText: 'Search Customers',
+                          prefixIcon: const Icon(Icons.search),
+                          filled: true,
+                          fillColor: Color.fromARGB(255, 228, 224, 224),
+                          contentPadding: EdgeInsets.all(8),
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(20),
+                              borderSide: BorderSide.none)),
                       onChanged: (value) {
+                        // if (debounce != null && debounce!.isActive)
+                        //   debounce!.cancel();
                         setState(() {
+                          // debounce = Timer(Duration(microseconds: 100), () {
                           _searchQuery = value.toLowerCase();
                           futureCustomers =
                               Services().searchCustomersFromDb(_searchQuery);
+                          // });
                         });
                       },
                     ),
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: IconButton(
-                      // onPressed: _dataLoading ? null : refreshData,
-                      onPressed: () {
-                        Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => SyncData()))
-                            .then((value) => setState(() {
-                                  futureCustomers = Services()
-                                      .searchCustomersFromDb(_searchQuery);
-                                }));
-                      },
-                      icon: const Icon(Icons.sync)),
+                  padding: const EdgeInsets.fromLTRB(4, 16, 8, 8),
+                  child: CircleAvatar(
+                    backgroundColor: Color.fromARGB(255, 59, 60, 136),
+                    radius: 24,
+                    child: IconButton(
+                        // onPressed: _dataLoading ? null : refreshData,
+                        onPressed: () {
+                          Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => SyncData()))
+                              .then((value) => setState(() {
+                                    futureCustomers = Services()
+                                        .searchCustomersFromDb(_searchQuery);
+                                  }));
+                        },
+                        icon: const Icon(Icons.sync)),
+                  ),
                 )
               ],
+            ),
+            const Divider(color: Color.fromARGB(255, 80, 144, 197)),
+            const SizedBox(
+              height: 20,
             ),
             Expanded(
               child: FutureBuilder<List<Customer>>(
@@ -134,7 +161,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                       _dataLoading) {
                     return const Center(child: CircularProgressIndicator());
                   } else if (snapshot.hasError) {
-                    print(snapshot);
+                    // print(snapshot);
                     _dataLoading = false;
                     return Center(child: Text('Error: ${snapshot.error}'));
                   } else {
@@ -145,65 +172,67 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                     return ListView.separated(
                       itemCount: (snapshot.hasData ? snapshot.data!.length : 0),
                       itemBuilder: (context, index) {
-                        if (_searchQuery.isEmpty ||
-                            snapshot.data![index].name!
-                                .toLowerCase()
-                                .contains(_searchQuery)) {
-                          return ListTile(
-                            leading: Padding(
-                              padding: const EdgeInsets.fromLTRB(8, 4, 4, 4),
-                              child: CircleAvatar(
-                                backgroundColor: Colors.black87,
-                                child: Text(
-                                  snapshot.data![index].name!.substring(0, 1),
-                                  style: TextStyle(fontSize: 20),
-                                ),
+                        // if (_searchQuery.isEmpty ||
+                        //     snapshot.data![index].name!
+                        //         .toLowerCase()
+                        //         .contains(_searchQuery)) {
+                        return ListTile(
+                          leading: Padding(
+                            padding: const EdgeInsets.fromLTRB(8, 4, 4, 4),
+                            child: CircleAvatar(
+                              backgroundColor: Color.fromARGB(221, 73, 72, 72),
+                              child: Text(
+                                snapshot.data![index].name!.substring(0, 1),
+                                style: const TextStyle(
+                                    fontSize: 18, color: Colors.white),
                               ),
                             ),
-                            trailing: TextButton(
-                              child: Icon(Icons.phone_in_talk_rounded),
-                              onPressed: () {
-                                launchUrlString(
-                                    "tel://${snapshot.data![index].phoneNo ?? ""}");
-                              },
-                            ),
-                            title: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    snapshot.data![index].name!,
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.bold),
-                                  ),
-                                  const SizedBox(
-                                    height: 5,
-                                  ),
-                                  Text(
-                                    'Ph:${snapshot.data![index].phoneNo ?? ""}',
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.normal,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => CustomerDetailsScreen(
-                                      snapshot.data![index]),
+                          ),
+                          // trailing: TextButton(
+                          //   child: const Icon(Icons.phone_in_talk_rounded),
+                          //   onPressed: () {
+                          //     launchUrlString(
+                          //         "tel://${snapshot.data![index].phoneNo ?? ""}");
+                          //   },
+                          // ),
+                          title: Padding(
+                            padding: const EdgeInsets.all(4.0),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  snapshot.data![index].name!,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: 16),
                                 ),
-                              );
-                            },
-                          );
-                        } else {
-                          return const SizedBox.shrink();
-                        }
+                                const SizedBox(
+                                  height: 5,
+                                ),
+                                Text(
+                                  'Ph:${snapshot.data![index].phoneNo ?? ""}',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.normal,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => CustomerDetailsScreen(
+                                    snapshot.data![index]),
+                              ),
+                            );
+                          },
+                        );
+                        // } else {
+                        //   return const SizedBox.shrink();
+                        // }
                       },
                       separatorBuilder: (context, index) => const Divider(),
                     );
